@@ -25,9 +25,17 @@ class BeaconDetector: NSObject, ObservableObject, CLLocationManagerDelegate {
         if status == .authorizedWhenInUse {
             if CLLocationManager.isMonitoringAvailable(for: CLBeaconRegion.self) {
                 if CLLocationManager.isRangingAvailable() {
-                    // good to go
+                    startScanning()
                 }
             }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didRange beacons: [CLBeacon], satisfying beaconConstraint: CLBeaconIdentityConstraint) {
+        if let beacon =  beacons.first {
+            update(distance: beacon.proximity)
+        } else {
+            update(distance: .unknown)
         }
     }
     
@@ -38,5 +46,10 @@ class BeaconDetector: NSObject, ObservableObject, CLLocationManagerDelegate {
         let beaconRegion = CLBeaconRegion(beaconIdentityConstraint: constraint, identifier: "MyBeacon")
         locationManager?.startMonitoring(for: beaconRegion)
         locationManager?.startRangingBeacons(satisfying: constraint)
+    }
+    
+    func update(distance: CLProximity) {
+        lastDistance = distance
+        didChange.send(())
     }
 }
